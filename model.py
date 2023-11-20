@@ -58,7 +58,31 @@ def _preprocess_data(data):
     # ---------------------------------------------------------------
 
     # ----------- Replace this code with your own preprocessing steps --------
-    predict_vector = feature_vector_df[['Madrid_wind_speed','Bilbao_rain_1h','Valencia_wind_speed']]
+    train_df = feature_vector_df.copy()  
+    # Make a copy to avoid modifying the original DataFrame
+    train_copy_df = train_df.copy(deep=True)
+    # Convert 'time' to a pandas datetime
+    train_copy_df['time'] = pd.to_datetime(train_copy_df['time'])
+    
+    train_copy_df['Day'] = train_copy_df['time'].dt.day
+    train_copy_df['Month'] = train_copy_df['time'].dt.month
+    train_copy_df['Year'] = train_copy_df['time'].dt.year
+    train_copy_df['Hour'] = train_copy_df['time'].dt.hour
+
+    # Select the desired columns
+    selected_columns = ['Year', 'Month', 'Day', 'Hour', 'Madrid_wind_speed',
+    'Madrid_clouds_all', 'Madrid_pressure', 'Seville_wind_speed',
+    'Seville_pressure', 'Barcelona_wind_deg', 'Barcelona_pressure',
+    'Valencia_humidity', 'Valencia_pressure', 'Bilbao_wind_speed',
+    'Bilbao_wind_deg', 'Bilbao_clouds_all', 'Bilbao_pressure']
+
+    train_copy_df = train_copy_df[selected_columns]
+    # Convert object-type values of Seville_pressure to in
+    train_copy_df['Seville_pressure'] = train_copy_df['Seville_pressure'].astype(str).str.extract('(\d+)', expand=False).astype(int)
+    # Replace the null values in Valencia_pressure with Madrid_pressure values on the same row.
+    train_copy_df['Valencia_pressure'].fillna(train_copy_df['Madrid_pressure'], inplace=True)
+
+    predict_vector = train_copy_df  # Use train_copy_df for predict_vector
     # ------------------------------------------------------------------------
 
     return predict_vector
